@@ -1,3 +1,8 @@
+# Team 2 from Private AI Bootcamp
+The SEAL implementation for our project is in the demo.cpp file in native/examples
+
+
+
 # Microsoft SEAL
 
 Microsoft SEAL is an easy-to-use open-source ([MIT licensed](LICENSE)) homomorphic
