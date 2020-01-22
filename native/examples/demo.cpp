@@ -33,23 +33,6 @@ private:
 	chrono::high_resolution_clock::time_point start_time_;
 };
 
-vector <double> sigmoid(const vector <double>& m1) {
-	
-	/*  Returns the value of the sigmoid function f(x) = 1/(1 + e^-x).
-	 Input: m1, a vector.
-	 Output: 1/(1 + e^-x) for every element of the input matrix m1.
-	 */
-	
-	const unsigned long VECTOR_SIZE = m1.size();
-	vector <double> output(VECTOR_SIZE);
-	
-	
-	for (unsigned i = 0; i != VECTOR_SIZE; ++i) {
-		output[i] = 1 / (1 + exp(-m1[i]));
-	}
-	
-	return output;
-}
 
 void bootcamp_demo()
 {
@@ -57,7 +40,9 @@ void bootcamp_demo()
 	
 	// Vector of inputs
 	size_t dimension = 15;
-	vector<double> inputs{ 0.1,	0.1,	0.1,	0.2,	0.0,	0.0,	0.2,	0.3,	0.1,	0.9,	-0.3,	0.8,	0.2,	0.6,	0.0 }; //15 dim
+	//vector<double> inputs{ 0.1,	0.1,	0.1,	0.2,	0.0, 0.0,	0.2,	0.3,	0.1,	0.9,	-0.3, 0.8,	0.2,	0.6,	0.0 }; //15 dim
+
+	vector<double> inputs{  0.8, 0.4, 0.3, 0.7, 0.6, 0.7, 0.8, 0.9, 0.6, 0.4, 0.5, 0.6, 0.4, 0.2, 0.6 }; //15 dim
 	
 	/*vector<double> inputs; //features
 	inputs.reserve(dimension);
@@ -93,6 +78,7 @@ void bootcamp_demo()
 	
 	// Create a vector of plaintexts
 	CKKSEncoder encoder(context);
+
 	/*Plaintext pt;
 	encoder.encode(inputs, scale, pt);*/
 	
@@ -164,18 +150,33 @@ void bootcamp_demo()
 		0.2238921, 0.43399185, 0.5753054, -0.18898354, 0.13639876, -0.15816061, -0.709152, -0.6216493, -0.32722148, -0.41932252, -0.043735396, 0.20394823, -0.5601734, -0.159232, 0.37627903,
 		-0.3102346, 0.3860459, -0.28035825, -0.41002125, -0.11171717, 0.15488632, -0.027155733, 0.42862874, -0.3164006, -0.08545141, 0.16562197, -0.1821526, -0.17811409, -0.2897358, -0.057849944,
 		-0.022295434, -0.1930951, -0.46937007, 0.32667413, 0.08007005, 0.32981986, 0.36812696, -0.30101386, -0.7164563, -0.36006156, -0.0005819032, 0.12393838, -0.068327844, 0.49282062, 0.60623616 };
-	vector<double> weight2{
+	vector<double> W2{
 		0.26412928, -0.72620237, -0.2765369, 0.21038327, -0.2737655, 0.2065479, -0.044716638, 0.55226415, 0.27009615, 0.15876967, -0.4926302, 0.14893562, 0.69126004, -0.051137313, -0.6713028
 	};
+	
 	vector<double> b1{
 		-0.5675228, -0.57475436, 0.505891, -0.60522175, 0.27601177, 0.44691256, -0.7730978, -0.42102093, 0.37034154, 0.35962796, 0.6113136, -0.25790912, 0.6142769, -0.5079587, -0.6533191
 	};
-	vector<double> b2{
-		-0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582,-0.11071582,-0.11071582,-0.11071582,-0.11071582
-	};
-	vector<vector<double> > M(dimension);
+
+	//vector<Plaintext> b1_plaintext(dimension);
+	Plaintext b1_plaintext;
 
 	int k = 0;
+	/*
+	for (k = 0; k < dimension; k++){
+		encoder.encode(b1[k], scale, b1_plaintext[k]);
+	}
+	*/
+	
+	//vector<double> b2{
+	//	-0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582, -0.11071582,-0.11071582,-0.11071582,-0.11071582,-0.11071582
+	//};
+	double b2 = 0; 
+	Plaintext b2_plaintext;
+	
+
+	vector<vector<double> > M(dimension);
+
 	for (int i = 0;  i < M.size(); i++){
 		M[i].resize(dimension);
 		for (int j = 0; j < dimension; j++ ){
@@ -186,23 +187,31 @@ void bootcamp_demo()
 	}
 
 //mult in plaintxt to check result
-vector<double> Mv(dimension,0);
-for (int i = 0;  i < M.size(); i++){
-	for (int j = 0; j < dimension; j++){
-		Mv[i] += M[i][j] * inputs[j];// + b1[j];
-		
+	vector<double> Mv(dimension,0);
+	for (int i = 0;  i < M.size(); i++){
+		for (int j = 0; j < dimension; j++){
+			Mv[i] += M[i][j] * inputs[j];// + b1[j];
+			
+		}
 	}
-}
+
+	for (int j = 0; j < dimension; j++){
+		Mv[j] = Mv[j] + b1[j];
+		//cout << "actual: " << Mv[j]  << endl;
+	}
+
 	for (int j = 0; j < dimension; j++){
 		Mv[j] = Mv[j]*Mv[j];
 		//cout << "actual: " << Mv[j]  << endl;
 	}
+
 	double sum = 0.0;
 	for (int j = 0; j < dimension; j++){
-		Mv[j] = Mv[j] * weight2[j];
+		Mv[j] = Mv[j] * W2[j];
 		//cout << "actual: " << Mv[j]  << endl;
 		sum += Mv[j];
  	}
+ 	sum = sum + b2;
 
 	
 
@@ -260,11 +269,24 @@ for (int i = 0; i < dimension; i++){
 	}*/
 	
 	//evaluator.relinearize_inplace(enc_result, relin_keys);
+	//evaluator.add_plain_inplace(enc_result,b2_plaintext);
+
 	evaluator.rescale_to_next_inplace(enc_result);
 	enc_result.scale() = pow(2.0, my_scale);
 	
 	
 	//done with (1) (matrix vector mult)
+	// now add b1 bias vector
+	/*
+	for (k = 0; k < dimension; k++){
+		encoder.encode(b1[k],enc_result.parms_id(), scale, b1_plaintext[k]);
+	}
+	*/
+	//batch_encoder.encode(b1,enc_result.parms_id(), scale, b1_plaintext);
+	encoder.encode(b1, enc_result.parms_id(),scale, b1_plaintext);
+	evaluator.add_plain_inplace(enc_result,b1_plaintext);
+	
+
 	
 	evaluator.square(enc_result, enc_result);
 	evaluator.relinearize_inplace(enc_result, relin_keys);
@@ -273,12 +295,12 @@ for (int i = 0; i < dimension; i++){
 	
 	//done with (2) (square in place)
 	
-	Plaintext weight_pt;
+	Plaintext W2_pt; //weight_pt;
 	
-	encoder.encode(weight2, enc_result.parms_id(), pow(2.0, last_plain_scale), weight_pt);
+	encoder.encode(W2, enc_result.parms_id(), pow(2.0, last_plain_scale), W2_pt);
 
 	//Stopwatch sw("Multiply-plain and rescale time");
-	evaluator.multiply_plain_inplace(enc_result, weight_pt);
+	evaluator.multiply_plain_inplace(enc_result, W2_pt);
     //evaluator.rescale_to_next_inplace(enc_result);
 	
 	// Sum the slots
@@ -292,6 +314,9 @@ for (int i = 0; i < dimension; i++){
 		}
 	}
 
+	// add bias value b2
+	encoder.encode(b2,enc_result.parms_id(), enc_result.scale() , b2_plaintext);
+	evaluator.add_plain_inplace(enc_result,b2_plaintext);
    
 } //End timing Homomorphic Circuit
 
