@@ -116,25 +116,51 @@ void bootcamp_demo()
 		keygen.galois_keys_save(rots, fs);
 	}
 
-	// Set up Encryptor
-	Encryptor encryptor(context, sk);
 	
+	bool encrypt_symmetric = false; 
 	// Create ciphertext
 	Ciphertext ct;
-	{
-		Stopwatch sw("Encryption time");
-		encryptor.encrypt_symmetric(ptxt_vec, ct);
 
-		ofstream fs("test_c_to_s.ct", ios::binary);
-		encryptor.encrypt_symmetric_save(ptxt_vec, fs);
+	if (encrypt_symmetric){ 
+		// Set up Encryptor
+		Encryptor encryptor(context, sk); // encrypt using secret key
+
+
+		
+		{
+			Stopwatch sw("Encryption time");
+			encryptor.encrypt_symmetric(ptxt_vec, ct);
+			
+
+			ofstream fs("test_c_to_s.ct", ios::binary);
+			encryptor.encrypt_symmetric_save(ptxt_vec, fs);
+			
+		}
+	}else {
+		// Set up Encryptor
+		Encryptor encryptor(context, pk);
+	
+
+		{
+			Stopwatch sw("Encryption time");
+			encryptor.encrypt(ptxt_vec, ct);
+		}
+		
+		// Save to see size
+		{
+			ofstream fs("test.ct", ios::binary);
+			ct.save(fs);
+		}
+
 	}
+
 	
 	// Now send this vector to the server!
 	// Also save and send the EncryptionParameters.
 	
 	// SERVER'S VIEW
 	Evaluator evaluator(context);
-	Decryptor decryptor(context, sk);
+	
 	
 	// Load EncryptionParameters and set up SEALContext
 	
@@ -328,6 +354,8 @@ for (int i = 0; i < dimension; i++){
    
 } //End timing Homomorphic Circuit
 
+
+//  Back to CLIENT VIEW
  	{
 		ofstream fs("test_s_to_c.ct", ios::binary);
         enc_result.save(fs);
@@ -335,7 +363,7 @@ for (int i = 0; i < dimension; i++){
 	
 Plaintext plain_result;
 vector<double> result;
-
+Decryptor decryptor(context, sk);
 
 decryptor.decrypt(enc_result, plain_result);
 encoder.decode(plain_result, result);
